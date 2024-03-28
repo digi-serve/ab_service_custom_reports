@@ -52,14 +52,21 @@ async function _getRC(AB, req, teams) {
    const myRCs = AB.queryByID(QUERY_IDS.MY_RCs).model();
    const rcsModel = isCoreUser ? allRCs : myRCs;
 
-   return (await rcsModel.findAll(
+   const result = (await rcsModel.findAll(
       {
          where: teamCond,
          populate: false,
       },
       { username: req._user.username },
       AB.req
-   )).map((t) => isCoreUser ? t["RC Name"] : t["BASE_OBJECT.RC Name"]);
+   ))
+      .map((t) => isCoreUser ? t["RC Name"] : t["BASE_OBJECT.RC Name"])
+      // Remove duplicated
+      .filter(function (t, pos, self) {
+         return t && self.indexOf(t) == pos;
+      });
+
+   return result;
 }
 
 async function getBalances(AB, req, teams, rcs, fyper) {
@@ -135,7 +142,8 @@ async function getJEarchive(AB, req, teams, rcs, fyper) {
    }
 
    // Pull JE archive
-   const results = await objJEarchive.findAll(
+   // NOTE: Prevent the performance issue. If no any filter condition, then it should not query data.
+   const results = rules?.length ? (await objJEarchive.findAll(
       {
          where: {
             glue: "and",
@@ -151,7 +159,7 @@ async function getJEarchive(AB, req, teams, rcs, fyper) {
       },
       { username: req._user.username },
       req
-   );
+   )) : [];
 
    return results.map((item) => {
       return {
