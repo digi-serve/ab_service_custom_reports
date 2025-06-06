@@ -185,7 +185,7 @@ module.exports = {
       });
 
       // Pull previous FY period to calculate
-      // https://github.com/digi-serve/ns_app/issues/452
+      // https://github.com/CruGlobal/ns_app/issues/452
       if (fyperstart)
          fyperstart = getPreviousFY(fyperstart);
 
